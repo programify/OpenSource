@@ -36,15 +36,16 @@
 /* embed libusb0 driver files from the following location */
 #ifndef LIBUSB0_DIR
 ///#define LIBUSB0_DIR "D:/libusb-win32"
-#define LIBUSB0_DIR "D:/Internet/Downloads/OpenSewer/libusb-win32-bin-1.2.6.0"
+#define LIBUSB0_DIR "D:\\Programify\\GitHub\\Programify\\OpenSource\\libusb-win32-bin-1.2.6.0"
+//                   D:\\Programify\\GitHub\\Programify\\OpenSource\\libwdi\\libwdi\\.msvc
 #endif
 
 /* embed libusbK driver files from the following location */
 #ifndef LIBUSBK_DIR
 ///#define LIBUSBK_DIR "D:/libusbK/bin"
-#define LIBUSBK_DIR "D:\\Internet\\Downloads\\OpenSewer\\libusbK-3.0.7.0\\bin"
+#define LIBUSBK_DIR "D:\\Programify\\GitHub\\Programify\\OpenSource\\libusbK-3.0.7.0\\bin"
+//                   D:\\Programify\\GitHub\\Programify\\OpenSource\\libwdi\\libwdi\\.msvc
 #endif
-//                   D:\Internet\Downloads\OpenSewer\libusbK-3.0.7.0\sys\x86\libusbK.sys
 
 /* embed user defined driver files from the following location */
 #ifndef USER_DIR

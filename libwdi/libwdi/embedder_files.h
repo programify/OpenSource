@@ -27,11 +27,12 @@
  * use the --with-userdir option when running configure.
  */
 
-struct emb {
-	int reuse_last;
-	char* file_name;
-	char* extraction_subdir;
-};
+struct emb
+{
+	int       reuse_last ;
+	char *    file_name ;
+	char *    extraction_subdir ;
+} ;
 
 #define _STR(s) #s
 #define STR(s) _STR(s)
@@ -39,38 +40,39 @@ struct emb {
 /*
  * files to embed
  */
-struct emb embeddable_fixed[] = {
+struct emb embeddable_fixed[] =
+{
 
 // WinUSB
 #if defined(WDK_DIR)
 #	if defined(OPT_M32)
-		{ 0, WDK_DIR "\\redist\\wdf\\x86\\WdfCoInstaller0" STR(WDF_VER) ".dll", "x86" },
+		{ 0, WDK_DIR "\\redist\\wdf\\x86\\WdfCoInstaller0" STR(WDF_VER) ".dll",    "x86" },
 		{ 0, WDK_DIR "\\redist\\" COINSTALLER_DIR "\\x86\\winusbcoinstaller2.dll", "x86" },
 #	endif	// OPT_M32
 #	if defined(OPT_M64)
-		{ 0, WDK_DIR "\\redist\\wdf\\" X64_DIR "\\WdfCoInstaller0" STR(WDF_VER) ".dll", "amd64" },
+		{ 0, WDK_DIR "\\redist\\wdf\\" X64_DIR "\\WdfCoInstaller0" STR(WDF_VER) ".dll",    "amd64" },
 		{ 0, WDK_DIR "\\redist\\" COINSTALLER_DIR "\\" X64_DIR "\\winusbcoinstaller2.dll", "amd64" },
 #	endif	// OPT_M64
 #endif	// WDK_DIR
 
 // libusb0
 #if defined(LIBUSB0_DIR)
-	{ 0, LIBUSB0_DIR "\\bin\\x86\\libusb0_x86.dll", "x86" },
+	{ 0, LIBUSB0_DIR "\\bin\\x86\\libusb0_x86.dll",    "x86" },
 	{ 0, LIBUSB0_DIR "\\bin\\x86\\install-filter.exe", "x86" },
 #	if defined(LIBUSBK_DIR)
 #		if defined(OPT_M32)
-			{ 1, "libusb0.dll", "x86" },	// reuse
+			{ 1, "libusb0.dll",     "x86" },    // reuse
 #		endif	// OPT_M32
 #		if defined(OPT_M64)
-			{ 1, "libusb0_x86.dll", "amd64" },	// reuse
+			{ 1, "libusb0_x86.dll", "amd64" },  // reuse
 #		endif	// OPT_M64
 #	endif	// LIBUSBK_DIR
 #	if defined(OPT_M32)
-		{ 0, LIBUSB0_DIR "\\bin\\x86\\libusb0.sys", "x86" },
+		{ 0, LIBUSB0_DIR "\\bin\\x86\\libusb0.sys",          "x86" },
 #	endif	// OPT_M32
 #	if defined(OPT_M64)
-		{ 0, LIBUSB0_DIR "\\bin\\amd64\\libusb0.dll", "amd64" },
-		{ 0, LIBUSB0_DIR "\\bin\\amd64\\libusb0.sys", "amd64" },
+		{ 0, LIBUSB0_DIR "\\bin\\amd64\\libusb0.dll",        "amd64" },
+		{ 0, LIBUSB0_DIR "\\bin\\amd64\\libusb0.sys",        "amd64" },
 		{ 0, LIBUSB0_DIR "\\bin\\amd64\\install-filter.exe", "amd64" },
 #	endif	// OPT_M64
 	{ 0, LIBUSB0_DIR "\\installer_license.txt", "license\\libusb0" },
@@ -126,13 +128,14 @@ struct emb embeddable_fixed[] = {
 	{ 0, INSTALLER_PATH_64 "\\installer_x64.exe", "." },
 #endif
 // inf templates for the tokenizer ("" directory means no extraction)
-	{ 0, "winusb.inf.in", "" },
+	{ 0, "winusb.inf.in",  "" },
 	{ 0, "libusb0.inf.in", "" },
 	{ 0, "libusbk.inf.in", "" },
-	{ 0, "usbser.inf.in", "" },
+	{ 0, "usbser.inf.in",  "" },
+
 // cat file lists for self signing
-	{ 0, "winusb.cat.in", "" },
+	{ 0, "winusb.cat.in",  "" },
 	{ 0, "libusb0.cat.in", "" },
 	{ 0, "libusbk.cat.in", "" },
-	{ 0, "usbser.cat.in", "" },
-};
+	{ 0, "usbser.cat.in",  "" }, 
+} ;

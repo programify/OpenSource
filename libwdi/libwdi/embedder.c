@@ -50,9 +50,9 @@
 #define safe_free(p) do {if (p != NULL) {free(p); p = NULL;}} while(0)
 #define perr(...) fprintf(stderr, "embedder : error: " __VA_ARGS__)
 
-const int nb_embeddables_fixed = sizeof(embeddable_fixed)/sizeof(struct emb);
-int nb_embeddables;
-struct emb* embeddable = embeddable_fixed;
+const int nb_embeddables_fixed = sizeof(embeddable_fixed)/sizeof(struct emb) ;
+int		nb_embeddables ;
+struct emb* embeddable = embeddable_fixed ;
 
 #ifndef MAX_PATH
 #ifdef PATH_MAX
@@ -312,108 +312,139 @@ __cdecl
 #endif
 main (int argc, char *argv[])
 {
-	int ret = 1, i, j, rebuild;
+	int	ret = 1, i, j, rebuild ;
 	size_t size;
 	char* file_name = NULL;
 	char* junk;
 	size_t* file_size = NULL;
 	int64_t* file_time = NULL;
-	FILE *fd, *header_fd;
-	time_t header_time;
-	struct NATIVE_STAT stbuf;
-	struct tm* ltm;
-	char internal_name[] = "file_###";
+	FILE	*fd, *header_fd;
+	time_t	header_time;
+	struct	NATIVE_STAT stbuf;
+	struct	tm* ltm;
+	char		internal_name[] = "file_###";
 	unsigned char* buffer = NULL;
 	unsigned char last;
-	char fullpath[MAX_PATH];
+	char		fullpath [MAX_PATH] ;
+
+	wchar_t	wszDirBuff [MAX_PATH] ;
 #if defined(_WIN32)
-	wchar_t wfullpath[MAX_PATH];
+	wchar_t	wfullpath [MAX_PATH] ;
 #endif
 
-	// Disable stdout bufferring
-	setvbuf(stdout, NULL, _IONBF, 0);
+// Disable stdout bufferring
+	setvbuf (stdout, NULL, _IONBF, 0) ;
 
-	if (argc != 2) {
-		perr("You must supply a header name.\n");
-		return 1;
+	if (argc != 2)
+	{
+		perr ("You must supply a header name.\n") ;
+		///return 1 ;
 	}
 
-	nb_embeddables = nb_embeddables_fixed;
+	nb_embeddables = nb_embeddables_fixed ;
+
 #if defined(USER_DIR)
-	add_user_files();
+	add_user_files () ;
 #endif
-	// Check if any of the embedded files have changed
-	rebuild = 0;
+// Check if any of the embedded files have changed
+	rebuild = 0 ;
 	// coverity[fs_check_call]
-	if (NATIVE_STAT(argv[1], &stbuf) == 0) {
-		header_time = stbuf.st_mtime;	// make sure to use modification time!
-		for (i=0; i<nb_embeddables; i++) {
-			if (embeddable[i].reuse_last) continue;
-			if (get_full_path(embeddable[i].file_name, fullpath, MAX_PATH)) {
-				perr("Unable to get full path for '%s'.\n", embeddable[i].file_name);
+
+	printf ("  EMBEDDER.EXE ('%s')\n", argv [1]) ;
+
+	GetCurrentDirectory (MAX_PATH, (LPWSTR) wszDirBuff) ;
+	printf ("  Current Directory '%ws'\n", wszDirBuff) ;
+
+// Check if any of the embedded files have changed
+	if (NATIVE_STAT (argv [1], & stbuf) == 0)
+	{
+	// make sure to use modification time!
+		header_time = stbuf.st_mtime ;
+		for (i = 0 ; i < nb_embeddables ; i ++)
+		{
+			if (embeddable[i].reuse_last)
+				continue ;
+			if (get_full_path(embeddable[i].file_name, fullpath, MAX_PATH))
+			{
+				perr("  Unable to get full path for '%s'.\n", embeddable[i].file_name);
 				goto out1;
 			}
-			if (NATIVE_STAT(fullpath, &stbuf) != 0) {
-				printf("unable to stat '%s' - assuming rebuild needed\n", fullpath);
+			if (NATIVE_STAT(fullpath, & stbuf) != 0)
+			{
+				printf("  Unable to stat '%s' - assuming rebuild needed\n", fullpath);
 				rebuild = 1;
 				break;
 			}
-			if (stbuf.st_mtime > header_time) {
-				printf("detected change for '%s'\n", fullpath);
+			if (stbuf.st_mtime > header_time)
+			{
+				printf("  Detected change for '%s'\n", fullpath);
 				rebuild = 1;
 				break;
 			}
 		}
-		if (!rebuild) {
+		if (! rebuild)
+		{
 			printf("  resources haven't changed - skipping step\n");
-			ret = 0; goto out1;
+			ret = 0;
+			goto out1;
 		}
 	}
 
 	size = sizeof(size_t)*nb_embeddables;
 	file_size = malloc(size);
-	if (file_size == NULL) goto out1;
+	if (file_size == NULL)
+		goto out1 ;
+
 	size = sizeof(int64_t)*nb_embeddables;
 	file_time = malloc(size);
-	if (file_time == NULL) goto out1;
+	if (file_time == NULL)
+		goto out1 ;
 
 	header_fd = fopen(argv[1], "w");
-	if (header_fd == NULL) {
+	if (header_fd == NULL)
+	{
 		perr("Could not create file '%s'.\n", argv[1]);
 		goto out1;
 	}
-	fprintf(header_fd, "#pragma once\n");
+	fprintf (header_fd, "#pragma once\n") ;
 
-	for (i=0; i<nb_embeddables; i++) {
-		if (embeddable[i].reuse_last) {
-			continue;
+	for (i = 0 ; i < nb_embeddables ; i ++)
+	{
+		if (embeddable[i].reuse_last)
+		{
+			continue ;
 		}
-		if (get_full_path(embeddable[i].file_name, fullpath, MAX_PATH)) {
-			perr("Could not get full path for '%s'.\n", embeddable[i].file_name);
-			goto out2;
+		if (get_full_path (embeddable[i].file_name, fullpath, MAX_PATH))
+		{
+			perr ("Could not get full path for '%s'.\n", embeddable [i].file_name) ;
+			goto out2 ;
 		}
 #if defined(_WIN32)
-		MultiByteToWideChar(CP_UTF8, 0, fullpath, -1, wfullpath, MAX_PATH);
-		wprintf(L"  EMBED  %s ", wfullpath);
-		fd = _wfopen(wfullpath, L"rb");
+		MultiByteToWideChar (CP_UTF8, 0, fullpath, -1, wfullpath, MAX_PATH) ;
+		wprintf (L"  EMBED  %s ", wfullpath) ;
+		fd = _wfopen (wfullpath, L"rb") ;
 #else
 		printf("  EMBED  %s ", fullpath);
 		fd = fopen(fullpath, "rb");
 #endif
-		if (fd == NULL) {
-			perr("Could not open file '%s'.\n", fullpath);
-			goto out2;
+		if (fd == NULL)
+		{
+			perr ("Could not open file '%s'.\n", fullpath) ;
+			goto out2 ;
 		}
 
 		// Read the creation date
-		memset(&stbuf, 0, sizeof(stbuf));
-		if ( (NATIVE_STAT(fullpath, &stbuf) == 0) && ((ltm = localtime(&stbuf.st_ctime)) != NULL) ) {
-			printf("(%04d.%02d.%02d)\n", ltm->tm_year+1900, ltm->tm_mon+1, ltm->tm_mday);
-		} else {
-			printf("\n");
+		memset (& stbuf, 0, sizeof (stbuf)) ;
+		if ((NATIVE_STAT (fullpath, & stbuf) == 0) && ((ltm = localtime (& stbuf.st_ctime)) != NULL))
+		{
+			printf ("(%04d.%02d.%02d)\n", ltm->tm_year+1900, ltm->tm_mon+1, ltm->tm_mday) ;
 		}
-		file_time[i] = (int64_t)stbuf.st_ctime;
-		file_size[i] = (size_t)stbuf.st_size;
+		else
+		{
+			printf ("\n") ;
+		}
+		file_time [i] = (int64_t) stbuf.st_ctime ;
+		file_size [i] = (size_t)  stbuf.st_size ;
 
 		buffer = (unsigned char*) malloc(file_size[i]);
 		if (buffer == NULL) {
@@ -467,17 +498,21 @@ main (int argc, char *argv[])
 	fprintf(header_fd, "\nconst int nb_resources = sizeof(resource)/sizeof(resource[0]);\n");
 
 	fclose(header_fd);
-	ret = 0; goto out1;
+	ret = 0;
+	goto out1;
 
 out4:
 	safe_free(buffer);
+
 out3:
 	fclose(fd);
+
 out2:
 	fclose(header_fd);
 	// Must delete a failed file so that Make can relaunch its build
 	// coverity[tainted_string]
 	NATIVE_UNLINK(argv[1]);
+
 out1:
 #if defined(USER_DIR)
 	for (i=nb_embeddables_fixed; i<nb_embeddables; i++) {

@@ -527,48 +527,58 @@ out:
 
 
 // Find out if the driver selected is actually embedded in this version of the library
-BOOL LIBWDI_API wdi_is_driver_supported(int driver_type, VS_FIXEDFILEINFO* driver_info)
+BOOL LIBWDI_API wdi_is_driver_supported (int driver_type, VS_FIXEDFILEINFO* driver_info)
 {
-	if (driver_type < WDI_USER) {	// github issue #40
-		if (driver_type != WDI_CDC) {
-			// The CDC driver does not have embedded binaries
-			if (driver_info != NULL) {
+	if (driver_type < WDI_USER)
+	{
+	// github issue #40
+		if (driver_type != WDI_CDC)
+		{
+		// The CDC driver does not have embedded binaries
+			if (driver_info != NULL)
+			{
 				memset(driver_info, 0, sizeof(VS_FIXEDFILEINFO));
 			}
 			get_version_info(driver_type, driver_info);
 		}
 	}
 
-	switch (driver_type) {
-	case WDI_WINUSB:
-#if defined(WDK_DIR)
-		return TRUE;
-#else
-		return FALSE;
-#endif
-	case WDI_LIBUSB0:
-#if defined(LIBUSB0_DIR)
-		return TRUE;
-#else
-		return FALSE;
-#endif
-	case WDI_LIBUSBK:
-#if defined(LIBUSBK_DIR)
-		return TRUE;
-#else
-		return FALSE;
-#endif
-	case WDI_USER:
-#if defined(USER_DIR)
-		return TRUE;
-#else
-		return FALSE;
-#endif
-	case WDI_CDC:
-		return TRUE;
-	default:
-		wdi_err("unknown driver type");
-		return FALSE;
+	switch (driver_type)
+	{
+		case WDI_WINUSB:
+		#if defined(WDK_DIR)
+			return TRUE;
+		#else
+			return FALSE;
+		#endif
+
+		case WDI_LIBUSB0:
+		#if defined(LIBUSB0_DIR)
+			return TRUE;
+		#else
+			return FALSE;
+		#endif
+
+		case WDI_LIBUSBK:
+		#if defined(LIBUSBK_DIR)
+			return TRUE;
+		#else
+			return FALSE;
+		#endif
+
+		case WDI_USER:
+		#if defined(USER_DIR)
+			return TRUE;
+		#else
+			return FALSE;
+		#endif
+
+		case WDI_CDC:
+			return TRUE;
+
+		default:
+			wdi_err("unknown driver type");
+			return FALSE;
 	}
 }
 
@@ -576,16 +586,20 @@ BOOL LIBWDI_API wdi_is_driver_supported(int driver_type, VS_FIXEDFILEINFO* drive
  * Find out if a file is embedded in the current libwdi resources
  * path is the relative path for
  */
-BOOL LIBWDI_API wdi_is_file_embedded(const char* path, const char* name)
+BOOL LIBWDI_API wdi_is_file_embedded (const char* path, const char* name)
 {
 	int i;
 
-	for (i=0; i<nb_resources; i++) {
-		if (safe_strcmp(name, resource[i].name) == 0) {
-			if (path == NULL) {
+	for (i=0; i<nb_resources; i++)
+	{
+		if (safe_strcmp(name, resource[i].name) == 0)
+		{
+			if (path == NULL)
+			{
 				return TRUE;
 			}
-			if (safe_strcmp(path, resource[i].subdir) == 0) {
+			if (safe_strcmp(path, resource[i].subdir) == 0)
+			{
 				return TRUE;
 			}
 		}
@@ -602,54 +616,56 @@ BOOL LIBWDI_API wdi_is_file_embedded(const char* path, const char* name)
  * \param error_code the error code whose description is desired
  * \returns a short description of the error code in English
  */
-const char* LIBWDI_API wdi_strerror(int error_code)
+const char* LIBWDI_API wdi_strerror (int error_code)
 {
 	static char unknown[] = "Unknown error (-9223372036854775808)";	// min 64 bit int in decimal
+
 	switch (error_code)
 	{
-	case WDI_SUCCESS:
-		return "Success";
-	case WDI_ERROR_IO:
-		return "Input/Output error";
-	case WDI_ERROR_INVALID_PARAM:
-		return "Invalid parameter";
-	case WDI_ERROR_ACCESS:
-		return "Access denied";
-	case WDI_ERROR_NO_DEVICE:
-		return "No such device";
-	case WDI_ERROR_NOT_FOUND:
-		return "Requested resource not found";
-	case WDI_ERROR_BUSY:
-		return "Requested resource busy or similar call already in progress";
-	case WDI_ERROR_TIMEOUT:
-		return "Operation timed out";
-	case WDI_ERROR_OVERFLOW:
-		return "Overflow";
-	case WDI_ERROR_INTERRUPTED:
-		return "System call interrupted";
-	case WDI_ERROR_RESOURCE:
-		return "Could not allocate resource";
-	case WDI_ERROR_NOT_SUPPORTED:
-		return "Operation not supported or not implemented";
-	case WDI_ERROR_EXISTS:
-		return "Resource already exists";
-	case WDI_ERROR_USER_CANCEL:
-		return "Cancelled by user";
+		case WDI_SUCCESS:
+			return "Success";
+		case WDI_ERROR_IO:
+			return "Input/Output error";
+		case WDI_ERROR_INVALID_PARAM:
+			return "Invalid parameter";
+		case WDI_ERROR_ACCESS:
+			return "Access denied";
+		case WDI_ERROR_NO_DEVICE:
+			return "No such device";
+		case WDI_ERROR_NOT_FOUND:
+			return "Requested resource not found";
+		case WDI_ERROR_BUSY:
+			return "Requested resource busy or similar call already in progress";
+		case WDI_ERROR_TIMEOUT:
+			return "Operation timed out";
+		case WDI_ERROR_OVERFLOW:
+			return "Overflow";
+		case WDI_ERROR_INTERRUPTED:
+			return "System call interrupted";
+		case WDI_ERROR_RESOURCE:
+			return "Could not allocate resource";
+		case WDI_ERROR_NOT_SUPPORTED:
+			return "Operation not supported or not implemented";
+		case WDI_ERROR_EXISTS:
+			return "Resource already exists";
+		case WDI_ERROR_USER_CANCEL:
+			return "Cancelled by user";
+
 	// The errors below are generated during driver installation
-	case WDI_ERROR_PENDING_INSTALLATION:
-		return "Another installation is detected pending";
-	case WDI_ERROR_NEEDS_ADMIN:
-		return "Unable to run process with required administrative privileges";
-	case WDI_ERROR_WOW64:
-		return "Attempted to use a 32 bit installer on a 64 bit machine";
-	case WDI_ERROR_INF_SYNTAX:
-		return "The syntax of the inf is invalid";
-	case WDI_ERROR_CAT_MISSING:
-		return "Unable to locate cat file";
-	case WDI_ERROR_UNSIGNED:
-		return "System policy has been modified to reject unsigned drivers";
-	case WDI_ERROR_OTHER:
-		return "Other error";
+		case WDI_ERROR_PENDING_INSTALLATION:
+			return "Another installation is detected pending";
+		case WDI_ERROR_NEEDS_ADMIN:
+			return "Unable to run process with required administrative privileges";
+		case WDI_ERROR_WOW64:
+			return "Attempted to use a 32 bit installer on a 64 bit machine";
+		case WDI_ERROR_INF_SYNTAX:
+			return "The syntax of the inf is invalid";
+		case WDI_ERROR_CAT_MISSING:
+			return "Unable to locate cat file";
+		case WDI_ERROR_UNSIGNED:
+			return "System policy has been modified to reject unsigned drivers";
+		case WDI_ERROR_OTHER:
+			return "Other error";
 	}
 	static_sprintf(unknown, "Unknown Error: %d", error_code);
 	return (const char*)unknown;
@@ -660,7 +676,7 @@ static char* guid_to_string(const GUID guid)
 {
 	static char guid_string[MAX_GUID_STRING_LENGTH];
 
-	sprintf(guid_string, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
+	sprintf (guid_string, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
 		(unsigned int)guid.Data1, guid.Data2, guid.Data3,
 		guid.Data4[0], guid.Data4[1], guid.Data4[2], guid.Data4[3],
 		guid.Data4[4], guid.Data4[5], guid.Data4[6], guid.Data4[7]);
@@ -670,23 +686,23 @@ static char* guid_to_string(const GUID guid)
 // free a device info struct
 static void free_di(struct wdi_device_info *di)
 {
-	if (di == NULL) {
-		return;
+	if (di == NULL)
+	{
+		return ;
 	}
-	safe_free(di->desc);
-	safe_free(di->driver);
-	safe_free(di->device_id);
-	safe_free(di->hardware_id);
-	safe_free(di->compatible_id);
-	safe_free(di->upper_filter);
-	safe_free(di);
+	safe_free (di->desc) ;
+	safe_free (di->driver) ;
+	safe_free (di->device_id) ;
+	safe_free (di->hardware_id) ;
+	safe_free (di->compatible_id) ;
+	safe_free (di->upper_filter) ;
+	safe_free (di) ;
 }
 
 // List USB devices
-int LIBWDI_API wdi_create_list(struct wdi_device_info** list,
-							   struct wdi_options_create_list* options)
+int LIBWDI_API wdi_create_list (struct wdi_device_info** list, struct wdi_options_create_list* options)
 {
-	PF_DECL_LIBRARY(Cfgmgr32);
+	PF_DECL_LIBRARY(Cfgmgr32) ;
 	PF_TYPE_DECL(WINAPI, CONFIGRET, CM_Get_Device_IDA, (DEVINST, PCHAR, ULONG, ULONG));
 
 	int r;
@@ -703,7 +719,8 @@ int LIBWDI_API wdi_create_list(struct wdi_device_info** list,
 	char strbuf[STR_BUFFER_SIZE], drv_version[] = "xxxxx.xxxxx.xxxxx.xxxxx";
 	wchar_t desc[MAX_DESC_LENGTH];
 	struct wdi_device_info *start = NULL, *cur = NULL, *device_info = NULL;
-	// NOTE: Don't forget to update the list of hubs in zadig.c (system_name[]) when adding new entries below
+
+// NOTE: Don't forget to update the list of hubs in zadig.c (system_name[]) when adding new entries below
 	const char* usbhub_name[] = { "usbhub", "usbhub3", "usb3hub", "nusb3hub", "rusb3hub", "flxhcih", "tihub3",
 		"etronhub3", "viahub3", "asmthub3", "iusb3hub", "vusb3hub", "amdhub30", "vhhub" };
 	const char usbccgp_name[] = "usbccgp";
@@ -712,7 +729,8 @@ int LIBWDI_API wdi_create_list(struct wdi_device_info** list,
 	MUTEX_START;
 
 	GET_WINDOWS_VERSION;
-	if (nWindowsVersion < WINDOWS_7) {
+	if (nWindowsVersion < WINDOWS_7)
+	{
 		wdi_err("this version of Windows is no longer supported");
 		r = WDI_ERROR_NOT_SUPPORTED;
 		goto out;
