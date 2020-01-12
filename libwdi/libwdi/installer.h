@@ -42,7 +42,7 @@
 #define safe_free(p) do {if (p != NULL) {free((void*)p); p = NULL;}} while(0)
 #define safe_min(a, b) min((size_t)(a), (size_t)(b))
 #define safe_strcp(dst, dst_max, src, count) do {memcpy(dst, src, safe_min(count, dst_max)); \
-	((char*)dst)[safe_min(count, dst_max)-1] = 0;} while(0)
+     ((char*)dst)[safe_min(count, dst_max)-1] = 0;} while(0)
 #define safe_strcpy(dst, dst_max, src) safe_strcp(dst, dst_max, src, safe_strlen(src)+1)
 #define static_strcpy(dst, src) safe_strcpy(dst, sizeof(dst), src)
 #define safe_strncat(dst, dst_max, src, count) strncat(dst, src, safe_min(count, dst_max - safe_strlen(dst) - 1))
@@ -72,24 +72,24 @@
  * For communications between installer <-> libwdi
  */
 enum installer_code {
-	IC_PRINT_MESSAGE,
-	IC_SYSLOG_MESSAGE,
-	IC_GET_DEVICE_ID,
-	IC_GET_HARDWARE_ID,
-	IC_GET_USER_SID,
-	IC_SET_TIMEOUT_INFINITE,
-	IC_SET_TIMEOUT_DEFAULT,
-	IC_SET_STATUS,
-	IC_INSTALLER_COMPLETED,
+     IC_PRINT_MESSAGE,
+     IC_SYSLOG_MESSAGE,
+     IC_GET_DEVICE_ID,
+     IC_GET_HARDWARE_ID,
+     IC_GET_USER_SID,
+     IC_SET_TIMEOUT_INFINITE,
+     IC_SET_TIMEOUT_DEFAULT,
+     IC_SET_STATUS,
+     IC_INSTALLER_COMPLETED,
 };
 
 /* Helper functions to access DLLs */
 static __inline HMODULE GetLibraryHandle(char* szDLLName)
 {
-	HANDLE h = GetModuleHandleA(szDLLName);
-	if (h == NULL)
-		h = LoadLibraryA(szDLLName);
-	return h;
+     HANDLE h = GetModuleHandleA(szDLLName);
+     if (h == NULL)
+          h = LoadLibraryA(szDLLName);
+     return h;
 }
 
 #define PF_DECL_LIBRARY(name) HANDLE h##name = NULL
@@ -100,9 +100,9 @@ static __inline HMODULE GetLibraryHandle(char* szDLLName)
 #define PF_DECL(proc) proc##_t pf##proc = NULL
 #define PF_TYPE_DECL(api, ret, proc, args) PF_TYPE(api, ret, proc, args); PF_DECL(proc)
 #define PF_INIT(proc, name) if (h##name == NULL) h##name = GetLibraryHandle(#name); \
-	pf##proc = (proc##_t) GetProcAddress(h##name, #proc)
+     pf##proc = (proc##_t) GetProcAddress(h##name, #proc)
 #define PF_INIT_OR_OUT(proc, name) PF_INIT(proc, name); if (pf##proc == NULL) { \
-	PF_ERR("Unable to locate %s() in %s\n", #proc, #name); goto out; }
+     PF_ERR("Unable to locate %s() in %s\n", #proc, #name); goto out; }
 
 /*
  * Cfgmgr32.dll interface
@@ -150,18 +150,18 @@ typedef RETURN_TYPE CONFIGRET;
 #endif
 
 typedef enum {
-	DIFXAPI_SUCCESS,
-	DIFXAPI_INFO,
-	DIFXAPI_WARNING,
-	DIFXAPI_ERROR
+     DIFXAPI_SUCCESS,
+     DIFXAPI_INFO,
+     DIFXAPI_WARNING,
+     DIFXAPI_ERROR
 } DIFXAPI_LOG;
 typedef void (__cdecl* DIFXAPILOGCALLBACK)(DIFXAPI_LOG EventType, DWORD Error, LPCSTR EventDescription, PVOID CallbackContext);
 
 typedef struct {
-	LPCSTR  pApplicationId;
-	LPCSTR  pDisplayName;
-	LPCSTR  pProductName;
-	LPCSTR  pMfgName;
+     LPCSTR  pApplicationId;
+     LPCSTR  pDisplayName;
+     LPCSTR  pProductName;
+     LPCSTR  pMfgName;
 } INSTALLERINFO, *PINSTALLERINFO;
 typedef const PINSTALLERINFO PCINSTALLERINFO;
 

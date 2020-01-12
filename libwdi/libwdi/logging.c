@@ -51,189 +51,189 @@ extern char *windows_error_str(uint32_t retval);
 
 static void write_to_pipe(const char* buffer, DWORD size, enum wdi_log_level level)
 {
-	DWORD written;
+     DWORD written;
 
-	// Earlier checks should ensure that this is never the case, but if it is
-	// drop the message
-	if (size > LOGGER_PIPE_SIZE)
-		return;
+     // Earlier checks should ensure that this is never the case, but if it is
+     // drop the message
+     if (size > LOGGER_PIPE_SIZE)
+          return;
 
-	// Do not allow the pipe to outgrow its allocated size, as this freezes the app
-	// See http://msdn.microsoft.com/en-us/library/aa365150.aspx
-	// If we are about to overflow, we deplete the pipe queue by issuing a bunch of
-	// SendMessage, which forces the messages to be processed (as opposed to PostMessage)
-	if (((log_messages_pipe_size + size) > LOGGER_PIPE_SIZE) && (log_messages_pending > 0)) {
-		while (log_messages_pending > 0)
-			SendMessage(logger_dest, logger_msg, (WPARAM)level, 0);
-		// Just in case
-		log_messages_pipe_size = 0;
-	}
-	if (WriteFile(logger_wr_handle, buffer, size, &written, NULL))
-		log_messages_pipe_size += written;
-	log_messages_pending++;
-	PostMessage(logger_dest, logger_msg, (WPARAM)level, 0);
+     // Do not allow the pipe to outgrow its allocated size, as this freezes the app
+     // See http://msdn.microsoft.com/en-us/library/aa365150.aspx
+     // If we are about to overflow, we deplete the pipe queue by issuing a bunch of
+     // SendMessage, which forces the messages to be processed (as opposed to PostMessage)
+     if (((log_messages_pipe_size + size) > LOGGER_PIPE_SIZE) && (log_messages_pending > 0)) {
+          while (log_messages_pending > 0)
+               SendMessage(logger_dest, logger_msg, (WPARAM)level, 0);
+          // Just in case
+          log_messages_pipe_size = 0;
+     }
+     if (WriteFile(logger_wr_handle, buffer, size, &written, NULL))
+          log_messages_pipe_size += written;
+     log_messages_pending++;
+     PostMessage(logger_dest, logger_msg, (WPARAM)level, 0);
 }
 
 static void pipe_wdi_log_v(enum wdi_log_level level,
-	const char *function, const char *format, va_list args)
+     const char *function, const char *format, va_list args)
 {
-	char buffer[LOGBUF_SIZE];
-	int size1, size2;
-	BOOL truncated = FALSE;
-	const char* prefix;
-	const char* truncation_notice = "TRUNCATION detected for above line - Please "
-		"send this log excerpt to the libwdi developers so we can fix it.";
+     char buffer[LOGBUF_SIZE];
+     int size1, size2;
+     BOOL truncated = FALSE;
+     const char* prefix;
+     const char* truncation_notice = "TRUNCATION detected for above line - Please "
+          "send this log excerpt to the libwdi developers so we can fix it.";
 
-	if (logger_wr_handle == INVALID_HANDLE_VALUE)
-		return;
+     if (logger_wr_handle == INVALID_HANDLE_VALUE)
+          return;
 
 #ifndef ENABLE_DEBUG_LOGGING
-	if (level < global_log_level)
-		return;
+     if (level < global_log_level)
+          return;
 #endif
 
-	switch (level) {
-	case WDI_LOG_LEVEL_DEBUG:
-		prefix = "debug";
-		break;
-	case WDI_LOG_LEVEL_INFO:
-		prefix = "info";
-		break;
-	case WDI_LOG_LEVEL_WARNING:
-		prefix = "warning";
-		break;
-	case WDI_LOG_LEVEL_ERROR:
-		prefix = "error";
-		break;
-	default:
-		prefix = "unknown";
-		break;
-	}
+     switch (level) {
+     case WDI_LOG_LEVEL_DEBUG:
+          prefix = "debug";
+          break;
+     case WDI_LOG_LEVEL_INFO:
+          prefix = "info";
+          break;
+     case WDI_LOG_LEVEL_WARNING:
+          prefix = "warning";
+          break;
+     case WDI_LOG_LEVEL_ERROR:
+          prefix = "error";
+          break;
+     default:
+          prefix = "unknown";
+          break;
+     }
 
-	size1 = safe_snprintf(buffer, LOGBUF_SIZE, "libwdi:%s [%s] ", prefix, function);
-	size2 = 0;
-	if (size1 < 0) {
-		buffer[LOGBUF_SIZE-1] = 0;
-		size1 = LOGBUF_SIZE-1;
-		truncated = TRUE;
-	} else {
-		size2 = safe_vsnprintf(buffer+size1, LOGBUF_SIZE-size1, format, args);
-		if (size2 < 0) {
-			buffer[LOGBUF_SIZE-1] = 0;
-			size2 = LOGBUF_SIZE-1-size1;
-			truncated = TRUE;
-		}
-	}
+     size1 = safe_snprintf(buffer, LOGBUF_SIZE, "libwdi:%s [%s] ", prefix, function);
+     size2 = 0;
+     if (size1 < 0) {
+          buffer[LOGBUF_SIZE-1] = 0;
+          size1 = LOGBUF_SIZE-1;
+          truncated = TRUE;
+     } else {
+          size2 = safe_vsnprintf(buffer+size1, LOGBUF_SIZE-size1, format, args);
+          if (size2 < 0) {
+               buffer[LOGBUF_SIZE-1] = 0;
+               size2 = LOGBUF_SIZE-1-size1;
+               truncated = TRUE;
+          }
+     }
 
-	write_to_pipe(buffer, size1+size2+1, level);
-	if (truncated)
-		write_to_pipe(truncation_notice, (DWORD)strlen(truncation_notice)+1, level);
+     write_to_pipe(buffer, size1+size2+1, level);
+     if (truncated)
+          write_to_pipe(truncation_notice, (DWORD)strlen(truncation_notice)+1, level);
 }
 
 static void console_wdi_log_v(enum wdi_log_level level,
-	const char *function, const char *format, va_list args)
+     const char *function, const char *format, va_list args)
 {
-	FILE *stream;
-	const char *prefix;
+     FILE *stream;
+     const char *prefix;
 
-	stream = stdout;
+     stream = stdout;
 
 #ifndef ENABLE_DEBUG_LOGGING
-	if (level < global_log_level)
-		return;
+     if (level < global_log_level)
+          return;
 #endif
 
-	switch (level) {
-	case WDI_LOG_LEVEL_DEBUG:
-		stream = stderr;
-		prefix = "debug";
-		break;
-	case WDI_LOG_LEVEL_INFO:
-		prefix = "info";
-		break;
-	case WDI_LOG_LEVEL_WARNING:
-		stream = stderr;
-		prefix = "warning";
-		break;
-	case WDI_LOG_LEVEL_ERROR:
-		stream = stderr;
-		prefix = "error";
-		break;
-	default:
-		stream = stderr;
-		prefix = "unknown";
-		break;
-	}
+     switch (level) {
+     case WDI_LOG_LEVEL_DEBUG:
+          stream = stderr;
+          prefix = "debug";
+          break;
+     case WDI_LOG_LEVEL_INFO:
+          prefix = "info";
+          break;
+     case WDI_LOG_LEVEL_WARNING:
+          stream = stderr;
+          prefix = "warning";
+          break;
+     case WDI_LOG_LEVEL_ERROR:
+          stream = stderr;
+          prefix = "error";
+          break;
+     default:
+          stream = stderr;
+          prefix = "unknown";
+          break;
+     }
 
-	fprintf(stream, "libwdi:%s [%s] ", prefix, function);
+     fprintf(stream, "libwdi:%s [%s] ", prefix, function);
 
-	vfprintf(stream, format, args);
+     vfprintf(stream, format, args);
 
-	fprintf(stream, "\n");
+     fprintf(stream, "\n");
 
 }
 
 void wdi_log(enum wdi_log_level level,
-	const char *function, const char *format, ...)
+     const char *function, const char *format, ...)
 {
-	va_list args;
+     va_list args;
 
-	va_start (args, format);
-	if (logger_dest != NULL) {
-		pipe_wdi_log_v(level, function, format, args);
-	} else {
-		console_wdi_log_v(level, function, format, args);
-	}
-	va_end (args);
+     va_start (args, format);
+     if (logger_dest != NULL) {
+          pipe_wdi_log_v(level, function, format, args);
+     } else {
+          console_wdi_log_v(level, function, format, args);
+     }
+     va_end (args);
 }
 
 // Create a synchronous pipe for messaging
 static int create_logger(DWORD buffsize)
 {
-	if (buffsize == 0) {
-		buffsize = LOGGER_PIPE_SIZE;
-	}
+     if (buffsize == 0) {
+          buffsize = LOGGER_PIPE_SIZE;
+     }
 
-	if (logger_wr_handle != INVALID_HANDLE_VALUE) {
-		// We (supposedly) don't have logging, so try to reach a stderr
-		fprintf(stderr, "trying to recreate logger pipe\n");
-		return WDI_ERROR_EXISTS;
-	}
+     if (logger_wr_handle != INVALID_HANDLE_VALUE) {
+          // We (supposedly) don't have logging, so try to reach a stderr
+          fprintf(stderr, "trying to recreate logger pipe\n");
+          return WDI_ERROR_EXISTS;
+     }
 
-	// Read end of the pipe
-	logger_rd_handle = CreateNamedPipeA(LOGGER_PIPE_NAME, PIPE_ACCESS_INBOUND,
-		PIPE_TYPE_MESSAGE|PIPE_READMODE_MESSAGE, 1, buffsize, buffsize, 0, NULL);
-	if (logger_rd_handle == INVALID_HANDLE_VALUE) {
-		fprintf(stderr, "could not create logger pipe for reading: %s\n", windows_error_str(0));
-		return WDI_ERROR_RESOURCE;
-	}
+     // Read end of the pipe
+     logger_rd_handle = CreateNamedPipeA(LOGGER_PIPE_NAME, PIPE_ACCESS_INBOUND,
+          PIPE_TYPE_MESSAGE|PIPE_READMODE_MESSAGE, 1, buffsize, buffsize, 0, NULL);
+     if (logger_rd_handle == INVALID_HANDLE_VALUE) {
+          fprintf(stderr, "could not create logger pipe for reading: %s\n", windows_error_str(0));
+          return WDI_ERROR_RESOURCE;
+     }
 
-	// Write end of the pipe
-	logger_wr_handle = CreateFileA(LOGGER_PIPE_NAME, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
-		FILE_ATTRIBUTE_NORMAL, NULL);
-	if (logger_wr_handle == INVALID_HANDLE_VALUE) {
-		fprintf(stderr, "could not create logger pipe for writing: %s\n", windows_error_str(0));
-		CloseHandle(logger_rd_handle);
-		logger_rd_handle = INVALID_HANDLE_VALUE;
-		return WDI_ERROR_RESOURCE;
-	}
+     // Write end of the pipe
+     logger_wr_handle = CreateFileA(LOGGER_PIPE_NAME, GENERIC_WRITE, 0, NULL, OPEN_EXISTING,
+          FILE_ATTRIBUTE_NORMAL, NULL);
+     if (logger_wr_handle == INVALID_HANDLE_VALUE) {
+          fprintf(stderr, "could not create logger pipe for writing: %s\n", windows_error_str(0));
+          CloseHandle(logger_rd_handle);
+          logger_rd_handle = INVALID_HANDLE_VALUE;
+          return WDI_ERROR_RESOURCE;
+     }
 
-	log_messages_pending = 0;
+     log_messages_pending = 0;
 
-	return WDI_SUCCESS;
+     return WDI_SUCCESS;
 }
 
 // Destroy the logging pipe
 static void destroy_logger(void)
 {
-	if (logger_wr_handle != INVALID_HANDLE_VALUE) {
-		CloseHandle(logger_wr_handle);
-		logger_wr_handle = INVALID_HANDLE_VALUE;
-	}
-	if (logger_rd_handle != INVALID_HANDLE_VALUE) {
-		CloseHandle(logger_rd_handle);
-		logger_rd_handle = INVALID_HANDLE_VALUE;
-	}
+     if (logger_wr_handle != INVALID_HANDLE_VALUE) {
+          CloseHandle(logger_wr_handle);
+          logger_wr_handle = INVALID_HANDLE_VALUE;
+     }
+     if (logger_rd_handle != INVALID_HANDLE_VALUE) {
+          CloseHandle(logger_rd_handle);
+          logger_rd_handle = INVALID_HANDLE_VALUE;
+     }
 }
 
 /*
@@ -243,24 +243,24 @@ static void destroy_logger(void)
  */
 int LIBWDI_API wdi_register_logger(HWND hWnd, UINT message, DWORD buffsize)
 {
-	int r;
+     int r;
 
-	MUTEX_START;
+     MUTEX_START;
 
-	if (logger_dest != NULL) {
-		r = WDI_ERROR_EXISTS;
-		goto out;
-	}
+     if (logger_dest != NULL) {
+          r = WDI_ERROR_EXISTS;
+          goto out;
+     }
 
-	r = create_logger(buffsize);
-	if (r == WDI_SUCCESS) {
-		logger_dest = hWnd;
-		logger_msg = message;
-	}
+     r = create_logger(buffsize);
+     if (r == WDI_SUCCESS) {
+          logger_dest = hWnd;
+          logger_msg = message;
+     }
 
 out:
-	CloseHandle(mutex); 
-	return r;
+     CloseHandle(mutex); 
+     return r;
 }
 
 /*
@@ -268,25 +268,25 @@ out:
  */
 int LIBWDI_API wdi_unregister_logger(HWND hWnd)
 {
-	int r = WDI_SUCCESS;
-	MUTEX_START;
+     int r = WDI_SUCCESS;
+     MUTEX_START;
 
-	if (logger_dest == NULL) {
-		goto out;
-	}
+     if (logger_dest == NULL) {
+          goto out;
+     }
 
-	if (logger_dest != hWnd) {
-		r = WDI_ERROR_INVALID_PARAM;
-		goto out;
-	}
+     if (logger_dest != hWnd) {
+          r = WDI_ERROR_INVALID_PARAM;
+          goto out;
+     }
 
-	destroy_logger();
-	logger_dest = NULL;
-	logger_msg = 0;
+     destroy_logger();
+     logger_dest = NULL;
+     logger_msg = 0;
 
 out:
-	CloseHandle(mutex);
-	return r;
+     CloseHandle(mutex);
+     return r;
 }
 
 /*
@@ -294,54 +294,54 @@ out:
  */
 int LIBWDI_API wdi_read_logger(char* buffer, DWORD buffer_size, DWORD* message_size)
 {
-	int size, r;
-	DWORD err;
+     int size, r;
+     DWORD err;
 
-	MUTEX_START;
+     MUTEX_START;
 
-	if ( (logger_rd_handle == INVALID_HANDLE_VALUE) && (create_logger(0) != WDI_SUCCESS) ) {
-		*message_size = 0;
-		r = WDI_ERROR_NOT_FOUND;
-		goto out;
-	}
+     if ( (logger_rd_handle == INVALID_HANDLE_VALUE) && (create_logger(0) != WDI_SUCCESS) ) {
+          *message_size = 0;
+          r = WDI_ERROR_NOT_FOUND;
+          goto out;
+     }
 
-	if (log_messages_pending == 0) {
-		if (log_messages_pipe_size == 0) {
-			buffer[0] = 0;
-			*message_size = 0;
-			r = WDI_SUCCESS;
-			goto out;
-		}
-		size = safe_snprintf(buffer, buffer_size, "ERROR: log buffer is empty");
-		if (size < 0) {
-			buffer[buffer_size-1] = 0;
-			r = buffer_size;
-			goto out;
-		}
-		*message_size = (DWORD)size;
-		r = WDI_SUCCESS;
-		goto out;
-	}
-	log_messages_pending--;
+     if (log_messages_pending == 0) {
+          if (log_messages_pipe_size == 0) {
+               buffer[0] = 0;
+               *message_size = 0;
+               r = WDI_SUCCESS;
+               goto out;
+          }
+          size = safe_snprintf(buffer, buffer_size, "ERROR: log buffer is empty");
+          if (size < 0) {
+               buffer[buffer_size-1] = 0;
+               r = buffer_size;
+               goto out;
+          }
+          *message_size = (DWORD)size;
+          r = WDI_SUCCESS;
+          goto out;
+     }
+     log_messages_pending--;
 
-	if (ReadFile(logger_rd_handle, (void*)buffer, buffer_size, message_size, NULL)) {
-		log_messages_pipe_size -= *message_size;
-		r = WDI_SUCCESS;
-		goto out;
-	}
+     if (ReadFile(logger_rd_handle, (void*)buffer, buffer_size, message_size, NULL)) {
+          log_messages_pipe_size -= *message_size;
+          r = WDI_SUCCESS;
+          goto out;
+     }
 
-	log_messages_pipe_size -= *message_size;
-	*message_size = 0;
-	err = GetLastError();
-	if ((err == ERROR_INSUFFICIENT_BUFFER) || (err == ERROR_MORE_DATA)) {
-		r = WDI_ERROR_OVERFLOW;
-		goto out;
-	}
+     log_messages_pipe_size -= *message_size;
+     *message_size = 0;
+     err = GetLastError();
+     if ((err == ERROR_INSUFFICIENT_BUFFER) || (err == ERROR_MORE_DATA)) {
+          r = WDI_ERROR_OVERFLOW;
+          goto out;
+     }
 
-	r = WDI_ERROR_IO;
+     r = WDI_ERROR_IO;
 out:
-	CloseHandle(mutex);
-	return r;
+     CloseHandle(mutex);
+     return r;
 }
 
 /*
@@ -350,8 +350,8 @@ out:
 int LIBWDI_API wdi_set_log_level(int level)
 {
 #if defined(ENABLE_DEBUG_LOGGING)
-	return WDI_ERROR_NOT_SUPPORTED;
+     return WDI_ERROR_NOT_SUPPORTED;
 #endif
-	global_log_level = level;
-	return WDI_SUCCESS;
+     global_log_level = level;
+     return WDI_SUCCESS;
 }

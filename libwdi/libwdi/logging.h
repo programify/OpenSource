@@ -25,10 +25,10 @@
 
 // Prevent two exclusive libwdi calls from running at the same time
 #define MUTEX_START char mutex_name[10+sizeof(__FUNCTION__)]; HANDLE mutex;                \
-	safe_snprintf(mutex_name, 10+sizeof(__FUNCTION__), "Global\\%s", __FUNCTION__);        \
-	mutex = CreateMutexA(NULL, TRUE, mutex_name);                                          \
-	if (mutex == NULL) return WDI_ERROR_RESOURCE;                                          \
-	if (GetLastError() == ERROR_ALREADY_EXISTS) { CloseHandle(mutex); return WDI_ERROR_BUSY; }
+     safe_snprintf(mutex_name, 10+sizeof(__FUNCTION__), "Global\\%s", __FUNCTION__);        \
+     mutex = CreateMutexA(NULL, TRUE, mutex_name);                                          \
+     if (mutex == NULL) return WDI_ERROR_RESOURCE;                                          \
+     if (GetLastError() == ERROR_ALREADY_EXISTS) { CloseHandle(mutex); return WDI_ERROR_BUSY; }
 
 #if defined(_MSC_VER)
 #define safe_vsnprintf(buf, size, format, arg) _vsnprintf_s(buf, size, _TRUNCATE, format, arg)
@@ -60,30 +60,30 @@
 #else /* !defined(_MSC_VER) || _MSC_VER > 1200 */
 
 void wdi_log_v(enum wdi_log_level level,
-	const char *function, const char *format, va_list args);
+     const char *function, const char *format, va_list args);
 
 #if defined(ENABLE_DEBUG_LOGGING) || defined(INCLUDE_DEBUG_LOGGING)
 #define LOG_BODY(level)       \
 {                             \
-	va_list args;             \
-	va_start (args, format);  \
-	wdi_log_v(level, "", format, args); \
-	va_end(args);             \
+     va_list args;             \
+     va_start (args, format);  \
+     wdi_log_v(level, "", format, args); \
+     va_end(args);             \
 }
 #else
 #define LOG_BODY(level) { }
 #endif
 
 void inline wdi_info(const char *format, ...)
-	LOG_BODY(LOG_LEVEL_INFO)
+     LOG_BODY(LOG_LEVEL_INFO)
 void inline wdi_warn(const char *format, ...)
-	LOG_BODY(LOG_LEVEL_WARNING)
+     LOG_BODY(LOG_LEVEL_WARNING)
 void inline wdi_err( const char *format, ...)
-	LOG_BODY(LOG_LEVEL_ERROR)
+     LOG_BODY(LOG_LEVEL_ERROR)
 
 void inline wdi_dbg(const char *format, ...)
 #if defined(ENABLE_DEBUG_LOGGING) || defined(INCLUDE_DEBUG_LOGGING)
-	LOG_BODY(LOG_LEVEL_DEBUG)
+     LOG_BODY(LOG_LEVEL_DEBUG)
 #else
 { }
 #endif

@@ -24,23 +24,23 @@
 
 typedef struct _token_entity_t
 {
-	const char* match;
-	char replace[1024];
+     const char* match;
+     char replace[1024];
 }token_entity_t;
 
 long tokenize_string(const char* src,
-						 long src_count,
-						 char** dst,
-						 const token_entity_t* token_entities,
-						 const char* tok_prefix,
-						 const char* tok_suffix,
-						 int recursive);
+                               long src_count,
+                               char** dst,
+                               const token_entity_t* token_entities,
+                               const char* tok_prefix,
+                               const char* tok_suffix,
+                               int recursive);
 
 long tokenize_resource(LPCSTR resource_name,
-					 LPCSTR resource_type,
-					 char** dst,
-					 const token_entity_t* token_entities,
-					 const char* tok_prefix,
-					 const char* tok_suffix,
-					 int recursive);
+                          LPCSTR resource_type,
+                          char** dst,
+                          const token_entity_t* token_entities,
+                          const char* tok_prefix,
+                          const char* tok_suffix,
+                          int recursive);
 #endif

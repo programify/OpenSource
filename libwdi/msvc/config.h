@@ -11,7 +11,7 @@
 #endif
 #if defined(_MSC_VER)
 // Disable some VS2012 Code Analysis warnings
-#pragma warning(disable:6258)		// We'll use TerminateThread() regardless
+#pragma warning(disable:6258)          // We'll use TerminateThread() regardless
 #pragma warning(disable:6387)
 #endif
 

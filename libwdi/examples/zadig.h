@@ -63,51 +63,51 @@
 
 // These are used to flag end users about the driver they are going to replace
 enum driver_type {
-	DT_SYSTEM,
-	DT_LIBUSB,
-	DT_UNKNOWN,
-	DT_NONE,
-	NB_DRIVER_TYPES,
+     DT_SYSTEM,
+     DT_LIBUSB,
+     DT_UNKNOWN,
+     DT_NONE,
+     NB_DRIVER_TYPES,
 };
 
 // For our custom notifications
 enum notification_type {
-	MSG_INFO,
-	MSG_WARNING,
-	MSG_ERROR,
-	MSG_QUESTION,
+     MSG_INFO,
+     MSG_WARNING,
+     MSG_ERROR,
+     MSG_QUESTION,
 };
 typedef INT_PTR (CALLBACK *Callback_t)(HWND, UINT, WPARAM, LPARAM);
 typedef struct {
-	WORD id;
-	Callback_t callback;
-} notification_info;	// To provide a "More info..." on notifications
+     WORD id;
+     Callback_t callback;
+} notification_info;     // To provide a "More info..." on notifications
 
 // WM_APP is not sent on focus, unlike WM_USER
 enum user_message_type {
-	UM_REFRESH_LIST = WM_APP,
-	UM_DEVICE_EVENT,
-	UM_LOGGER_EVENT,
-	UM_DOWNLOAD_INIT,
-	UM_DOWNLOAD_EXIT,
-	UM_NO_UPDATE
+     UM_REFRESH_LIST = WM_APP,
+     UM_DEVICE_EVENT,
+     UM_LOGGER_EVENT,
+     UM_DOWNLOAD_INIT,
+     UM_DOWNLOAD_EXIT,
+     UM_NO_UPDATE
 };
 
 // WCID states
 enum wcid_state {
-	WCID_NONE,
-	WCID_FALSE,
-	WCID_TRUE,
+     WCID_NONE,
+     WCID_FALSE,
+     WCID_TRUE,
 };
 
 // Timers
 #define TID_MESSAGE 0x1000
 
 typedef struct {
-	WORD version[4];
-	DWORD platform_min[2];		// minimum platform version required
-	char* download_url;
-	char* release_notes;
+     WORD version[4];
+     DWORD platform_min[2];          // minimum platform version required
+     char* download_url;
+     char* release_notes;
 } APPLICATION_UPDATE;
 
 /*
@@ -117,10 +117,10 @@ typedef struct {
  * to define an 'ext_t my_extensions' variable initialized with the relevant attributes.
  */
 typedef struct ext_t {
-	const size_t count;
-	const char* filename;
-	const char** extension;
-	const char** description;
+     const size_t count;
+     const char* filename;
+     const char** extension;
+     const char** description;
 } ext_t;
 
 #ifndef __VA_GROUP__
@@ -129,14 +129,14 @@ typedef struct ext_t {
 #define EXT_X(prefix, ...) const char* _##prefix##_x[] = { __VA_ARGS__ }
 #define EXT_D(prefix, ...) const char* _##prefix##_d[] = { __VA_ARGS__ }
 #define EXT_DECL(var, filename, extensions, descriptions)                   \
-	EXT_X(var, extensions);                                                 \
-	EXT_D(var, descriptions);                                               \
-	ext_t var = { ARRAYSIZE(_##var##_x), filename, _##var##_x, _##var##_d }
+     EXT_X(var, extensions);                                                 \
+     EXT_D(var, descriptions);                                               \
+     ext_t var = { ARRAYSIZE(_##var##_x), filename, _##var##_x, _##var##_d }
 
 #define safe_free(p) do {if ((void*)p != NULL) {free((void*)p); p = NULL;}} while(0)
 #define safe_min(a, b) min((size_t)(a), (size_t)(b))
 #define safe_strcp(dst, dst_max, src, count) do {memcpy(dst, src, safe_min(count, dst_max)); \
-	((char*)dst)[safe_min(count, dst_max)-1] = 0;} while(0)
+     ((char*)dst)[safe_min(count, dst_max)-1] = 0;} while(0)
 #define safe_strcpy(dst, dst_max, src) safe_strcp(dst, dst_max, src, safe_strlen(src)+1)
 #define static_strcpy(dst, src) safe_strcpy(dst, sizeof(dst), src)
 #define safe_strncat(dst, dst_max, src, count) strncat(dst, src, safe_min(count, dst_max - safe_strlen(dst) - 1))
@@ -221,30 +221,30 @@ extern HMODULE  OpenedLibrariesHandle[MAX_LIBRARY_HANDLES];
 extern WORD     OpenedLibrariesHandleSize;
 #define         OPENED_LIBRARIES_VARS HMODULE OpenedLibrariesHandle[MAX_LIBRARY_HANDLES]; WORD OpenedLibrariesHandleSize = 0
 static __inline void FreeAllLibraries(void) {
-	while (OpenedLibrariesHandleSize > 0)
-		FreeLibrary(OpenedLibrariesHandle[--OpenedLibrariesHandleSize]);
+     while (OpenedLibrariesHandleSize > 0)
+          FreeLibrary(OpenedLibrariesHandle[--OpenedLibrariesHandleSize]);
 }
 static __inline HMODULE GetLibraryHandle(char* szLibraryName) {
-	HMODULE h = NULL;
-	if ((h = GetModuleHandleA(szLibraryName)) == NULL) {
-		if (OpenedLibrariesHandleSize >= MAX_LIBRARY_HANDLES) {
-			dprintf("Error: MAX_LIBRARY_HANDLES is too small\n");
-		} else {
-			h = LoadLibraryA(szLibraryName);
-			if (h != NULL)
-				OpenedLibrariesHandle[OpenedLibrariesHandleSize++] = h;
-		}
-	}
-	return h;
+     HMODULE h = NULL;
+     if ((h = GetModuleHandleA(szLibraryName)) == NULL) {
+          if (OpenedLibrariesHandleSize >= MAX_LIBRARY_HANDLES) {
+               dprintf("Error: MAX_LIBRARY_HANDLES is too small\n");
+          } else {
+               h = LoadLibraryA(szLibraryName);
+               if (h != NULL)
+                    OpenedLibrariesHandle[OpenedLibrariesHandleSize++] = h;
+          }
+     }
+     return h;
 }
-#define PF_TYPE(api, ret, proc, args)		typedef ret (api *proc##_t)args
-#define PF_DECL(proc)						static proc##_t pf##proc = NULL
-#define PF_TYPE_DECL(api, ret, proc, args)	PF_TYPE(api, ret, proc, args); PF_DECL(proc)
-#define PF_INIT(proc, name)					if (pf##proc == NULL) pf##proc = \
-	(proc##_t) GetProcAddress(GetLibraryHandle(#name), #proc)
-#define PF_INIT_OR_OUT(proc, name)			do {PF_INIT(proc, name);         \
-	if (pf##proc == NULL) {dprintf("Unable to locate %s() in %s.dll: %s\n",  \
-	#proc, #name, WindowsErrorString()); goto out;} } while(0)
+#define PF_TYPE(api, ret, proc, args)          typedef ret (api *proc##_t)args
+#define PF_DECL(proc)                              static proc##_t pf##proc = NULL
+#define PF_TYPE_DECL(api, ret, proc, args)     PF_TYPE(api, ret, proc, args); PF_DECL(proc)
+#define PF_INIT(proc, name)                         if (pf##proc == NULL) pf##proc = \
+     (proc##_t) GetProcAddress(GetLibraryHandle(#name), #proc)
+#define PF_INIT_OR_OUT(proc, name)               do {PF_INIT(proc, name);         \
+     if (pf##proc == NULL) {dprintf("Unable to locate %s() in %s.dll: %s\n",  \
+     #proc, #name, WindowsErrorString()); goto out;} } while(0)
 
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(A) (sizeof(A)/sizeof((A)[0]))

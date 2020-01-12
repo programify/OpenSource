@@ -43,150 +43,150 @@ extern "C" {
    If the key has subkeys, this call will fail. */
 static __inline BOOL DeleteRegistryKey(HKEY key_root, const char* key_name)
 {
-	HKEY hSoftware = NULL;
-	LONG s;
+     HKEY hSoftware = NULL;
+     LONG s;
 
-	if (RegOpenKeyExA(key_root, "SOFTWARE", 0, KEY_READ|KEY_CREATE_SUB_KEY, &hSoftware) != ERROR_SUCCESS) {
-		return FALSE;
-	}
+     if (RegOpenKeyExA(key_root, "SOFTWARE", 0, KEY_READ|KEY_CREATE_SUB_KEY, &hSoftware) != ERROR_SUCCESS) {
+          return FALSE;
+     }
 
-	s = RegDeleteKeyA(hSoftware, key_name);
-	if ((s != ERROR_SUCCESS) && (s != ERROR_FILE_NOT_FOUND)) {
-		SetLastError(s);
-		dprintf("Failed to delete registry key HKCU\\Software\\%s: %s", key_name,
-			(s == ERROR_ACCESS_DENIED)?"Key is not empty":WindowsErrorString());
-	}
-	RegCloseKey(hSoftware);
-	return ((s == ERROR_SUCCESS) || (s == ERROR_FILE_NOT_FOUND));
+     s = RegDeleteKeyA(hSoftware, key_name);
+     if ((s != ERROR_SUCCESS) && (s != ERROR_FILE_NOT_FOUND)) {
+          SetLastError(s);
+          dprintf("Failed to delete registry key HKCU\\Software\\%s: %s", key_name,
+               (s == ERROR_ACCESS_DENIED)?"Key is not empty":WindowsErrorString());
+     }
+     RegCloseKey(hSoftware);
+     return ((s == ERROR_SUCCESS) || (s == ERROR_FILE_NOT_FOUND));
 }
 
 /* Read a generic registry key value. If a short key_name is used, assume that it belongs to
    the application and create the app subkey if required */
 static __inline BOOL _GetRegistryKey(HKEY key_root, const char* key_name, DWORD reg_type, LPBYTE dest, DWORD dest_size)
 {
-	const char software_prefix[] = "SOFTWARE\\";
-	char long_key_name[MAX_PATH] = { 0 };
-	BOOL r = FALSE;
-	size_t i;
-	LONG s;
-	HKEY hSoftware = NULL, hApp = NULL;
-	DWORD dwDisp, dwType = -1, dwSize = dest_size;
+     const char software_prefix[] = "SOFTWARE\\";
+     char long_key_name[MAX_PATH] = { 0 };
+     BOOL r = FALSE;
+     size_t i;
+     LONG s;
+     HKEY hSoftware = NULL, hApp = NULL;
+     DWORD dwDisp, dwType = -1, dwSize = dest_size;
 
-	memset(dest, 0, dest_size);
+     memset(dest, 0, dest_size);
 
-	if (key_name == NULL)
-		return FALSE;
+     if (key_name == NULL)
+          return FALSE;
 
-	for (i = safe_strlen(key_name); i > 0; i--) {
-		if (key_name[i] == '\\')
-			break;
-	}
+     for (i = safe_strlen(key_name); i > 0; i--) {
+          if (key_name[i] == '\\')
+               break;
+     }
 
-	if (i != 0) {
-		// Prefix with "SOFTWARE" if needed
-		if (_strnicmp(key_name, software_prefix, sizeof(software_prefix) - 1) != 0) {
-			if (i + sizeof(software_prefix) >= sizeof(long_key_name))
-				return FALSE;
-			strcpy(long_key_name, software_prefix);
-			safe_strcat(long_key_name, sizeof(long_key_name), key_name);
-			long_key_name[sizeof(software_prefix) + i - 1] = 0;
-		} else {
-			if (i >= sizeof(long_key_name))
-				return FALSE;
-			safe_strcpy(long_key_name, sizeof(long_key_name), key_name);
-			long_key_name[i] = 0;
-		}
-		i++;
-		if (RegOpenKeyExA(key_root, long_key_name, 0, KEY_READ, &hApp) != ERROR_SUCCESS) {
-			hApp = NULL;
-			goto out;
-		}
-	} else {
-		if (RegOpenKeyExA(key_root, "SOFTWARE", 0, KEY_READ | KEY_CREATE_SUB_KEY, &hSoftware) != ERROR_SUCCESS) {
-			hSoftware = NULL;
-			goto out;
-		}
-		if (RegCreateKeyExA(hSoftware, COMPANY_NAME "\\" APPLICATION_NAME, 0, NULL, 0,
-			KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, NULL, &hApp, &dwDisp) != ERROR_SUCCESS) {
-			hApp = NULL;
-			goto out;
-		}
-	}
+     if (i != 0) {
+          // Prefix with "SOFTWARE" if needed
+          if (_strnicmp(key_name, software_prefix, sizeof(software_prefix) - 1) != 0) {
+               if (i + sizeof(software_prefix) >= sizeof(long_key_name))
+                    return FALSE;
+               strcpy(long_key_name, software_prefix);
+               safe_strcat(long_key_name, sizeof(long_key_name), key_name);
+               long_key_name[sizeof(software_prefix) + i - 1] = 0;
+          } else {
+               if (i >= sizeof(long_key_name))
+                    return FALSE;
+               safe_strcpy(long_key_name, sizeof(long_key_name), key_name);
+               long_key_name[i] = 0;
+          }
+          i++;
+          if (RegOpenKeyExA(key_root, long_key_name, 0, KEY_READ, &hApp) != ERROR_SUCCESS) {
+               hApp = NULL;
+               goto out;
+          }
+     } else {
+          if (RegOpenKeyExA(key_root, "SOFTWARE", 0, KEY_READ | KEY_CREATE_SUB_KEY, &hSoftware) != ERROR_SUCCESS) {
+               hSoftware = NULL;
+               goto out;
+          }
+          if (RegCreateKeyExA(hSoftware, COMPANY_NAME "\\" APPLICATION_NAME, 0, NULL, 0,
+               KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, NULL, &hApp, &dwDisp) != ERROR_SUCCESS) {
+               hApp = NULL;
+               goto out;
+          }
+     }
 
-	s = RegQueryValueExA(hApp, &key_name[i], NULL, &dwType, (LPBYTE)dest, &dwSize);
-	// No key means default value of 0 or empty string
-	if ((s == ERROR_FILE_NOT_FOUND) || ((s == ERROR_SUCCESS) && (dwType == reg_type) && (dwSize > 0))) {
-		r = TRUE;
-	}
+     s = RegQueryValueExA(hApp, &key_name[i], NULL, &dwType, (LPBYTE)dest, &dwSize);
+     // No key means default value of 0 or empty string
+     if ((s == ERROR_FILE_NOT_FOUND) || ((s == ERROR_SUCCESS) && (dwType == reg_type) && (dwSize > 0))) {
+          r = TRUE;
+     }
 out:
-	if (hSoftware != NULL)
-		RegCloseKey(hSoftware);
-	if (hApp != NULL)
-		RegCloseKey(hApp);
-	return r;
+     if (hSoftware != NULL)
+          RegCloseKey(hSoftware);
+     if (hApp != NULL)
+          RegCloseKey(hApp);
+     return r;
 }
 
 /* Write a generic registry key value (create the key if it doesn't exist) */
 static __inline BOOL _SetRegistryKey(HKEY key_root, const char* key_name, DWORD reg_type, LPBYTE src, DWORD src_size)
 {
-	const char software_prefix[] = "SOFTWARE\\";
-	char long_key_name[MAX_PATH] = { 0 };
-	BOOL r = FALSE;
-	size_t i;
-	HKEY hRoot = NULL, hApp = NULL;
-	DWORD dwDisp, dwType = reg_type;
+     const char software_prefix[] = "SOFTWARE\\";
+     char long_key_name[MAX_PATH] = { 0 };
+     BOOL r = FALSE;
+     size_t i;
+     HKEY hRoot = NULL, hApp = NULL;
+     DWORD dwDisp, dwType = reg_type;
 
-	if (key_name == NULL)
-		return FALSE;
+     if (key_name == NULL)
+          return FALSE;
 
-	if (RegOpenKeyExA(key_root, NULL, 0, KEY_READ | KEY_CREATE_SUB_KEY, &hRoot) != ERROR_SUCCESS) {
-		hRoot = NULL;
-		goto out;
-	}
+     if (RegOpenKeyExA(key_root, NULL, 0, KEY_READ | KEY_CREATE_SUB_KEY, &hRoot) != ERROR_SUCCESS) {
+          hRoot = NULL;
+          goto out;
+     }
 
-	// Find if we're dealing with a short key
-	for (i = safe_strlen(key_name); i>0; i--) {
-		if (key_name[i] == '\\')
-			break;
-	}
+     // Find if we're dealing with a short key
+     for (i = safe_strlen(key_name); i>0; i--) {
+          if (key_name[i] == '\\')
+               break;
+     }
 
-	if (i == 0) {
-		// If this is a short key name, store the value under our app sub-hive
-		if (RegCreateKeyExA(hRoot, "SOFTWARE\\" COMPANY_NAME "\\" APPLICATION_NAME, 0, NULL, 0,
-			KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, NULL, &hApp, &dwDisp) != ERROR_SUCCESS) {
-			hApp = NULL;
-			goto out;
-		}
-	} else {
-		// Prefix with "SOFTWARE" if needed
-		if (_strnicmp(key_name, software_prefix, sizeof(software_prefix) - 1) != 0) {
-			if (i + sizeof(software_prefix) >= sizeof(long_key_name))
-				goto out;
-			strcpy(long_key_name, software_prefix);
-			safe_strcat(long_key_name, sizeof(long_key_name), key_name);
-			long_key_name[sizeof(software_prefix) + i - 1] = 0;
-		} else {
-			if (i >= sizeof(long_key_name))
-				goto out;
-			safe_strcpy(long_key_name, sizeof(long_key_name), key_name);
-			long_key_name[i] = 0;
-		}
-		i++;
-		if (RegCreateKeyExA(hRoot, long_key_name, 0, NULL, 0,
-			KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, NULL, &hApp, &dwDisp) != ERROR_SUCCESS) {
-			hApp = NULL;
-			goto out;
-		}
-	}
+     if (i == 0) {
+          // If this is a short key name, store the value under our app sub-hive
+          if (RegCreateKeyExA(hRoot, "SOFTWARE\\" COMPANY_NAME "\\" APPLICATION_NAME, 0, NULL, 0,
+               KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, NULL, &hApp, &dwDisp) != ERROR_SUCCESS) {
+               hApp = NULL;
+               goto out;
+          }
+     } else {
+          // Prefix with "SOFTWARE" if needed
+          if (_strnicmp(key_name, software_prefix, sizeof(software_prefix) - 1) != 0) {
+               if (i + sizeof(software_prefix) >= sizeof(long_key_name))
+                    goto out;
+               strcpy(long_key_name, software_prefix);
+               safe_strcat(long_key_name, sizeof(long_key_name), key_name);
+               long_key_name[sizeof(software_prefix) + i - 1] = 0;
+          } else {
+               if (i >= sizeof(long_key_name))
+                    goto out;
+               safe_strcpy(long_key_name, sizeof(long_key_name), key_name);
+               long_key_name[i] = 0;
+          }
+          i++;
+          if (RegCreateKeyExA(hRoot, long_key_name, 0, NULL, 0,
+               KEY_SET_VALUE | KEY_QUERY_VALUE | KEY_CREATE_SUB_KEY, NULL, &hApp, &dwDisp) != ERROR_SUCCESS) {
+               hApp = NULL;
+               goto out;
+          }
+     }
 
-	r = (RegSetValueExA(hApp, &key_name[i], 0, dwType, src, src_size) == ERROR_SUCCESS);
+     r = (RegSetValueExA(hApp, &key_name[i], 0, dwType, src, src_size) == ERROR_SUCCESS);
 
 out:
-	if (hRoot != NULL)
-		RegCloseKey(hRoot);
-	if (hApp != NULL)
-		RegCloseKey(hApp);
-	return r;
+     if (hRoot != NULL)
+          RegCloseKey(hRoot);
+     if (hApp != NULL)
+          RegCloseKey(hApp);
+     return r;
 }
 
 /* Helpers for 64 bit registry operations */
@@ -194,34 +194,34 @@ out:
 #define SetRegistryKey64(root, key, val) _SetRegistryKey(root, key, REG_QWORD, (LPBYTE)&val, sizeof(LONGLONG))
 // Check that a key is accessible for R/W (will create a key if not already existing)
 static __inline BOOL CheckRegistryKey64(HKEY root, const char* key) {
-	LONGLONG val;
-	return GetRegistryKey64(root, key, &val); // && SetRegistryKey64(key, val));
+     LONGLONG val;
+     return GetRegistryKey64(root, key, &val); // && SetRegistryKey64(key, val));
 }
 static __inline int64_t ReadRegistryKey64(HKEY root, const char* key) {
-	LONGLONG val;
-	GetRegistryKey64(root, key, &val);
-	return (int64_t)val;
+     LONGLONG val;
+     GetRegistryKey64(root, key, &val);
+     return (int64_t)val;
 }
 static __inline BOOL WriteRegistryKey64(HKEY root, const char* key, int64_t val) {
-	LONGLONG tmp = (LONGLONG)val;
-	return SetRegistryKey64(root, key, tmp);
+     LONGLONG tmp = (LONGLONG)val;
+     return SetRegistryKey64(root, key, tmp);
 }
 
 /* Helpers for 32 bit registry operations */
 #define GetRegistryKey32(root, key, pval) _GetRegistryKey(root, key, REG_DWORD, (LPBYTE)pval, sizeof(DWORD))
 #define SetRegistryKey32(root, key, val) _SetRegistryKey(root, key, REG_DWORD, (LPBYTE)&val, sizeof(DWORD))
 static __inline BOOL CheckRegistryKey32(HKEY root, const char* key) {
-	DWORD val;
-	return (GetRegistryKey32(root, key, &val) && SetRegistryKey32(root, key, val));
+     DWORD val;
+     return (GetRegistryKey32(root, key, &val) && SetRegistryKey32(root, key, val));
 }
 static __inline int32_t ReadRegistryKey32(HKEY root, const char* key) {
-	DWORD val;
-	GetRegistryKey32(root, key, &val);
-	return (int32_t)val;
+     DWORD val;
+     GetRegistryKey32(root, key, &val);
+     return (int32_t)val;
 }
 static __inline BOOL WriteRegistryKey32(HKEY root, const char* key, int32_t val) {
-	DWORD tmp = (DWORD)val;
-	return SetRegistryKey32(root, key, tmp);
+     DWORD tmp = (DWORD)val;
+     return SetRegistryKey32(root, key, tmp);
 }
 
 /* Helpers for boolean registry operations */
@@ -234,9 +234,9 @@ static __inline BOOL WriteRegistryKey32(HKEY root, const char* key, int32_t val)
 #define SetRegistryKeyStr(root, key, str) _SetRegistryKey(root, key, REG_SZ, (LPBYTE)str, safe_strlen(str))
 // Use a static buffer - don't allocate
 static __inline char* ReadRegistryKeyStr(HKEY root, const char* key) {
-	static char str[512];
-	_GetRegistryKey(root, key, REG_SZ, (LPBYTE)str, (DWORD)sizeof(str)-1);
-	return str;
+     static char str[512];
+     _GetRegistryKey(root, key, REG_SZ, (LPBYTE)str, (DWORD)sizeof(str)-1);
+     return str;
 }
 #define WriteRegistryKeyStr SetRegistryKeyStr
 
