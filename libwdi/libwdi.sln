@@ -26,8 +26,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "getopt", "examples\getopt\.
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "detect_64build", "libwdi\.msvc\detect_64build.vcxproj", "{5FAEF8F7-C809-4A68-862F-F8BC6E775B61}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ADI", "ADI\ADI.vcxproj", "{864CB65B-A945-4D46-A0F8-179D88F2E24B}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -110,14 +108,6 @@ Global
 		{5FAEF8F7-C809-4A68-862F-F8BC6E775B61}.Release|Win32.Build.0 = Release|Win32
 		{5FAEF8F7-C809-4A68-862F-F8BC6E775B61}.Release|x64.ActiveCfg = Release|x64
 		{5FAEF8F7-C809-4A68-862F-F8BC6E775B61}.Release|x64.Build.0 = Release|x64
-		{864CB65B-A945-4D46-A0F8-179D88F2E24B}.Debug|Win32.ActiveCfg = Debug|Win32
-		{864CB65B-A945-4D46-A0F8-179D88F2E24B}.Debug|Win32.Build.0 = Debug|Win32
-		{864CB65B-A945-4D46-A0F8-179D88F2E24B}.Debug|x64.ActiveCfg = Debug|x64
-		{864CB65B-A945-4D46-A0F8-179D88F2E24B}.Debug|x64.Build.0 = Debug|x64
-		{864CB65B-A945-4D46-A0F8-179D88F2E24B}.Release|Win32.ActiveCfg = Release|Win32
-		{864CB65B-A945-4D46-A0F8-179D88F2E24B}.Release|Win32.Build.0 = Release|Win32
-		{864CB65B-A945-4D46-A0F8-179D88F2E24B}.Release|x64.ActiveCfg = Release|x64
-		{864CB65B-A945-4D46-A0F8-179D88F2E24B}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
