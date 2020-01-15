@@ -1857,6 +1857,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
      return 0;
 }
 
+//****************************************************************************
+//                                                            Copyright Claims
+//****************************************************************************
 /*
  * Copyright (c) 2010-2017 Pete Batard <pete@akeo.ie>
  * For more info, please visit http://libwdi.akeo.ie

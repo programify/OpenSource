@@ -40,13 +40,15 @@
 #include "resource.h"
 
 // WM_APP is not sent on focus, unlike WM_USER
-enum stdlg_user_message_type {
+enum stdlg_user_message_type
+{
      UM_PROGRESS_START = WM_APP,
      UM_PROGRESS_STOP,
-};
+} ;
 
 // Messages that appear in our progress bar as time passes
-static const char* progress_message[] = {
+static const char * progress_message[] =
+{
      "Installation can take some time...",
      "The installation process can take up to 5 minutes...",
      "You may also be asked to reboot for KMDF upgrades.",
@@ -175,44 +177,47 @@ static void center_dialog(HWND dialog)
 /*
  * Dialog sub-elements
  */
-static void init_children(HWND hDlg)
+static void init_children (HWND hDlg)
 {
-     HFONT hFont;
+     HFONT     hFont ;
 
-     // Progress Bar
-     hProgressBar = CreateWindowExA(WS_EX_NOPARENTNOTIFY, PROGRESS_CLASSA,
+// Progress Bar
+     hProgressBar = CreateWindowExA (WS_EX_NOPARENTNOTIFY, PROGRESS_CLASSA,
           NULL,
           WS_CHILDWINDOW | WS_VISIBLE | PBS_MARQUEE,
           10,35,250,12,
           hDlg,
           NULL,
           app_instance,
-          NULL);
-     if (hProgressBar == NULL) {
-          wdi_err("Unable to create progress bar: %s", windows_error_str(0));
+          NULL) ;
+     if (hProgressBar == NULL)
+     {
+          wdi_err ("Unable to create progress bar: %s", windows_error_str (0)) ;
      }
 
-     // Start progress animation
-     PostMessage(hProgressBar, PBM_SETMARQUEE, TRUE, 0);
+// Start progress animation
+     PostMessage (hProgressBar, PBM_SETMARQUEE, TRUE, 0) ;
 
-     // Progress Text
-     hProgressText = CreateWindowExA(WS_EX_NOPARENTNOTIFY|WS_EX_TRANSPARENT, WC_STATICA,
+// Progress Text
+     hProgressText = CreateWindowExA (WS_EX_NOPARENTNOTIFY|WS_EX_TRANSPARENT, WC_STATICA,
           "Installing Driver...",
           WS_CHILDWINDOW | WS_VISIBLE | WS_GROUP,
           12,12,250,16,
           hDlg,
           NULL,
           app_instance,
-          NULL);
-     if (hProgressBar == NULL) {
-          wdi_err("Unable to create progress text: %s", windows_error_str(0));
+          NULL) ;
+     if (hProgressBar == NULL)
+     {
+          wdi_err ("Unable to create progress text: %s", windows_error_str (0)) ;
      }
 
-     // Set the font to MS Dialog default
-     if (pfCreateFontA != NULL) {
-          hFont = pfCreateFontA(-11, 0, 0, 0, FW_DONTCARE, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
-               CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "MS Shell Dlg 2");
-          SendMessage(hProgressText, WM_SETFONT, (WPARAM)hFont, (LPARAM)TRUE);
+// Set the font to MS Dialog default
+     if (pfCreateFontA != NULL)
+     {
+          hFont = pfCreateFontA (-11, 0, 0, 0, FW_DONTCARE, 0, 0, 0, ANSI_CHARSET, OUT_DEFAULT_PRECIS,
+               CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "MS Shell Dlg 2") ;
+          SendMessage (hProgressText, WM_SETFONT, (WPARAM) hFont, (LPARAM) TRUE) ;
      }
 }
 

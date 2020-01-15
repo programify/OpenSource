@@ -29,7 +29,8 @@
 #define WDI_APPLICATION_NAME        "libwdi"
 
 // Windows versions
-enum WindowsVersion {
+enum WindowsVersion
+{
      WINDOWS_UNDEFINED = -1,
      WINDOWS_UNSUPPORTED = 0,
      WINDOWS_7 = 0x61,
@@ -38,7 +39,7 @@ enum WindowsVersion {
      WINDOWS_10_PREVIEW1 = 0x64,
      WINDOWS_10 = 0xA0,
      WINDOWS_MAX
-};
+} ;
 
 extern int nWindowsVersion;
 extern char WindowsVersionStr[128];

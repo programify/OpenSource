@@ -384,41 +384,49 @@ static __inline char* xlocale_to_utf8(const char* str)
  * Send individual lines of the syslog section pointed by buffer back to the main application
  * xbuffer's payload MUST start at byte 1 to accommodate the SYSLOG_MESSAGE prefix
  */
-DWORD process_syslog(char* buffer, DWORD size)
+DWORD process_syslog (char* buffer, DWORD size)
 {
      DWORD i, junk, start = 0;
-     char* xbuffer;
-     char* ins_string = "<ins>";
-     char conversion_error[] = " <Garbled data>";
+     char * xbuffer;
+     char * ins_string = "<ins>";
+     char   conversion_error[] = " <Garbled data>";
 
-     if (buffer == NULL) return 0;
+     if (buffer == NULL)
+          return 0 ;
 
-     // CR/LF breakdown
-     for (i=0; i<size; i++) {
-          if ((buffer[i] == 0x0D) || (buffer[i] == 0x0A)) {
-               do {
-                    buffer[i++] = 0;
-               } while ( ((buffer[i] == 0x0D) || (buffer[i] == 0x0A)) && (i <= size) );
+// CR/LF breakdown
+     for (i = 0 ; i < size ; i ++)
+     {
+          if ((buffer [i] == 0x0D) || (buffer [i] == 0x0A))
+          {
+               do
+               {
+                    buffer [i ++] = 0 ;
+               }
+                    while (((buffer [i] == 0x0D) ||
+                            (buffer [i] == 0x0A)) && (i <= size)) ;
 
-               // The setupapi.dev.log uses a dubious method to mark its current position
-               // If there's any "<ins>" line in any log file, it's game over then
-               if (safe_strcmp(ins_string, buffer + start) == 0) {
+          // The setupapi.dev.log uses a dubious method to mark its current position
+          // If there's any "<ins>" line in any log file, it's game over then
+               if (safe_strcmp(ins_string, buffer + start) == 0)
+               {
                     return start;
                }
 
-               // The logs are using the system locale. Convert to UTF8 (with extra leading byte)
-               xbuffer = xlocale_to_utf8(&buffer[start]);
+          // The logs are using the system locale. Convert to UTF8 (with extra leading byte)
+               xbuffer = xlocale_to_utf8 (& buffer [start]) ;
                if (xbuffer == NULL) {
                     xbuffer = conversion_error;
                }
 
-               // This is where we use the extra start byte
-               xbuffer[0] = IC_SYSLOG_MESSAGE;
-               WriteFile(pipe_handle, xbuffer, (DWORD)safe_strlen(&xbuffer[1])+2, &junk, NULL);
-               if (xbuffer != conversion_error) {
-                    free(xbuffer);
+          // This is where we use the extra start byte
+               xbuffer [0] = IC_SYSLOG_MESSAGE ;
+               WriteFile (pipe_handle, xbuffer, (DWORD) strlen (& xbuffer [1]) + 2, & junk, NULL) ;
+               if (xbuffer != conversion_error)
+               {
+                    free (xbuffer) ;
                }
-               start = i;
+               start = i ;
           }
      }
      // start does not necessarily equate size, if there are truncated lines at the end
@@ -440,9 +448,10 @@ void __cdecl syslog_reader_thread(void* param)
      int i;
 
      // Try the various driver installation logs
-     for (i=0; i<NB_SYSLOGS; i++) {
-          safe_strcpy(log_path, MAX_PATH_LENGTH, getenv("WINDIR"));     // Use %WINDIR% env variable
-          safe_strcat(log_path, MAX_PATH_LENGTH, syslog_name[i]);
+     for (i=0; i<NB_SYSLOGS; i++)
+     {
+          safecpy (log_path, MAX_PATH_LENGTH, getenv ("WINDIR")) ;     // Use %WINDIR% env variable
+          safecat (log_path, MAX_PATH_LENGTH, syslog_name [i]) ;
           // coverity[tainted_string]
           log_handle = CreateFileA(log_path, GENERIC_READ, FILE_SHARE_READ|FILE_SHARE_WRITE,
                NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -541,20 +550,21 @@ static char err_string[STR_BUFFER_SIZE];
      // Translate codes returned by SetupAPI. The ones we are dealing with are either
      // in 0x0000xxxx or 0xE000xxxx and can be distinguished from standard error codes.
      // See http://msdn.microsoft.com/en-us/library/windows/hardware/ff545011.aspx
-     switch (error_code & 0xE0000000) {
-     case 0:
-          error_code = HRESULT_FROM_WIN32(error_code);     // Still leaves ERROR_SUCCESS unmodified
-          break;
-     case 0xE0000000:
-          error_code =  0x80000000 | (FACILITY_SETUPAPI << 16) | (error_code & 0x0000FFFF);
-          break;
-     default:
-          break;
+     switch (error_code & 0xE0000000)
+     {
+          case 0:
+               error_code = HRESULT_FROM_WIN32(error_code);     // Still leaves ERROR_SUCCESS unmodified
+               break;
+          case 0xE0000000:
+               error_code =  0x80000000 | (FACILITY_SETUPAPI << 16) | (error_code & 0x0000FFFF);
+               break;
+          default:
+               break;
      }
 
      size = FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, error_code,
-          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), &err_string[safe_strlen(err_string)],
-          STR_BUFFER_SIZE - (DWORD)safe_strlen(err_string), NULL);
+          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), &err_string [safelen (err_string)],
+          STR_BUFFER_SIZE - (DWORD) safelen (err_string), NULL) ;
      if (size == 0) {
           format_error = GetLastError();
           if (format_error)
@@ -563,8 +573,9 @@ static char err_string[STR_BUFFER_SIZE];
           else
                safe_sprintf(err_string, STR_BUFFER_SIZE, "Unknown error code %u", error_code);
      } else {
-          // Remove CR/LF terminators
-          for (i=safe_strlen(err_string)-1; (i>=0) && ((err_string[i]==0x0A) || (err_string[i]==0x0D)); i--) {
+     // Remove CR/LF terminators
+          for (i = safelen (err_string) - 1 ; (i >= 0) && ((err_string [i] == 0x0A) || (err_string [i] == 0x0D)) ; i --)
+          {
                err_string[i] = 0;
           }
      }
@@ -842,8 +853,8 @@ int __cdecl main(int argc_ansi, char** argv_ansi)
           ret = WDI_ERROR_ACCESS;
           goto out;
      }
-     safe_strcat(path, MAX_PATH_LENGTH, "\\");
-     safe_strcat(path, MAX_PATH_LENGTH, inf_name);
+     safecat (path, MAX_PATH_LENGTH, "\\") ;
+     safecat (path, MAX_PATH_LENGTH, inf_name) ;
 
      device_id = req_id(IC_GET_DEVICE_ID);
      hardware_id = req_id(IC_GET_HARDWARE_ID);
@@ -930,3 +941,86 @@ out:
      PF_FREE_LIBRARY(Cfgmgr32);
      return ret;
 }
+
+//----------------------------------------------------------------------------
+//                                                                     safecpy
+//----------------------------------------------------------------------------
+void safecpy (char * cpDest, int iDstSize, char * cpSource)
+{
+     int  iLenCopy ;
+     int  iLenSrc ;
+
+// Ignore if destination is null or size is too small
+     if (cpDest == 0)
+          return ;
+     if (iDstSize < 1)
+          return ;
+// Determine string length of source
+     iLenSrc = 0 ;
+     if (cpSource != 0)
+          iLenSrc = (int) strlen (cpSource) ;
+// Determine number of characters to copy
+     iLenCopy = min (iDstSize, iLenSrc) ;
+// Perform copy
+     while (iLenCopy --)
+     {
+         *cpDest = *cpSource ;
+          cpDest ++ ;
+          cpSource ++ ;
+     }
+// Null terminate destination
+    *cpDest = 0x00 ;
+}
+
+//----------------------------------------------------------------------------
+//                                                                     safecat
+//----------------------------------------------------------------------------
+void safecat (char * cpDest, int iDstSize, char * cpSource)
+{
+     int  iLenCopy ;
+     int  iLenDest ;
+     int  iLenSrc ;
+
+// Ignore if destination is null or size is too small
+     if (cpDest == 0)
+          return ;
+     if (iDstSize < 1)
+          return ;
+// Determine string length of source
+     iLenSrc = 0 ;
+     if (cpSource != 0)
+          iLenSrc = (int) strlen (cpSource) ;
+// Determine existing length of destination string
+     iLenDest = (int) strlen (cpDest) ;
+// Determine number of characters to copy
+     iLenCopy = min (iDstSize - iLenDest, iLenSrc) ;
+// Move destination pointer to achieve append
+     cpDest += iLenDest ;
+// Perform copy
+     while (iLenCopy --)
+     {
+         *cpDest = *cpSource ;
+          cpDest ++ ;
+          cpSource ++ ;
+     }
+// Null terminate destination
+    *cpDest = 0x00 ;
+}
+
+//----------------------------------------------------------------------------
+//                                                                     safelen
+//----------------------------------------------------------------------------
+int safelen (char * cpString)
+{
+// Ignore if string is null
+     if (cpString == 0)
+          return 0 ;
+     return (int) strlen (cpString) ;
+}
+
+//----------------------------------------------------------------------------
+//                                                                    safencat
+//----------------------------------------------------------------------------
+//void safencat (char * cpDest, int iDstSize, char * cpSource, int iCount)
+//{
+//}
